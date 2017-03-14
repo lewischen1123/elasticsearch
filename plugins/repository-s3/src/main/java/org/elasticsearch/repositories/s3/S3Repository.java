@@ -317,6 +317,7 @@ public class S3Repository extends BlobStoreRepository {
         boolean useThrottleRetries = getValue(metadata.settings(), settings, Repository.USE_THROTTLE_RETRIES_SETTING, Repositories.USE_THROTTLE_RETRIES_SETTING);
         this.chunkSize = getValue(metadata.settings(), settings, Repository.CHUNK_SIZE_SETTING, Repositories.CHUNK_SIZE_SETTING);
         this.compress = getValue(metadata.settings(), settings, Repository.COMPRESS_SETTING, Repositories.COMPRESS_SETTING);
+        Integer maxRetries = getValue(metadata.settings(), settings, Repository.MAX_RETRIES_SETTING, Repositories.MAX_RETRIES_SETTING);
 
         // We make sure that chunkSize is bigger or equal than/to bufferSize
         if (this.chunkSize.getBytes() < bufferSize.getBytes()) {
@@ -338,10 +339,10 @@ public class S3Repository extends BlobStoreRepository {
 
         logger.debug("using bucket [{}], chunk_size [{}], server_side_encryption [{}], " +
             "buffer_size [{}], max_retries [{}], use_throttle_retries [{}], cannedACL [{}], storageClass [{}], path_style_access [{}]",
-            bucket, chunkSize, serverSideEncryption, bufferSize, useThrottleRetries, cannedACL,
+            bucket, chunkSize, serverSideEncryption, bufferSize,maxRetries, useThrottleRetries, cannedACL,
             storageClass, pathStyleAccess);
 
-        AmazonS3 client = s3Service.client(metadata.settings(), useThrottleRetries, pathStyleAccess);
+        AmazonS3 client = s3Service.client(metadata.settings(),maxRetries, useThrottleRetries, pathStyleAccess);
         blobStore = new S3BlobStore(settings, client, bucket, serverSideEncryption, bufferSize, cannedACL, storageClass);
 
         String basePath = getValue(metadata.settings(), settings, Repository.BASE_PATH_SETTING, Repositories.BASE_PATH_SETTING);

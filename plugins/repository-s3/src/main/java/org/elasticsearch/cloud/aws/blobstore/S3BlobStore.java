@@ -105,10 +105,6 @@ public class S3BlobStore extends AbstractComponent implements BlobStore {
         return bufferSize.bytesAsInt();
     }
 
-    public int numberOfRetries() {
-        return numberOfRetries;
-    }
-
     @Override
     public BlobContainer blobContainer(BlobPath path) {
         return new S3BlobContainer(path, this);

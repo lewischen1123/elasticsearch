@@ -62,7 +62,7 @@ public class InternalAwsS3Service extends AbstractLifecycleComponent implements 
     }
 
     @Override
-    public synchronized AmazonS3 client(Settings repositorySettings,
+    public synchronized AmazonS3 client(Settings repositorySettings, Integer maxRetries,
                                               boolean useThrottleRetries, Boolean pathStyleAccess) {
         String clientName = CLIENT_NAME.get(repositorySettings);
         String foundEndpoint = findEndpoint(logger, repositorySettings, settings, clientName);
@@ -77,7 +77,7 @@ public class InternalAwsS3Service extends AbstractLifecycleComponent implements 
 
         client = new AmazonS3Client(
             credentials,
-            buildConfiguration(logger, repositorySettings, settings, clientName, foundEndpoint, useThrottleRetries));
+            buildConfiguration(logger, repositorySettings,maxRetries, settings, clientName, foundEndpoint, useThrottleRetries));
 
         if (pathStyleAccess != null) {
             client.setS3ClientOptions(new S3ClientOptions().withPathStyleAccess(pathStyleAccess));
@@ -92,7 +92,7 @@ public class InternalAwsS3Service extends AbstractLifecycleComponent implements 
     }
 
     // pkg private for tests
-    static ClientConfiguration buildConfiguration(Logger logger, Settings repositorySettings, Settings settings,
+    static ClientConfiguration buildConfiguration(Logger logger, Settings repositorySettings, Integer maxRetries, Settings settings,
                                                          String clientName, String endpoint,
                                                          boolean useThrottleRetries) {
         ClientConfiguration clientConfiguration = new ClientConfiguration();
@@ -119,6 +119,12 @@ public class InternalAwsS3Service extends AbstractLifecycleComponent implements 
                     .withProxyUsername(proxyUsername.toString())
                     .withProxyPassword(proxyPassword.toString());
             }
+        }
+
+        if (maxRetries != null)
+        {
+            // If not explicitly set, default to 3 with exponential backoff policy
+            clientConfiguration.setMaxErrorRetry(maxRetries);
         }
 
         clientConfiguration.setUseThrottleRetries(useThrottleRetries);
